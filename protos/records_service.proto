@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option go_package = "github.com/fine-track/records-app/pb";
+
+import "record.proto";
+
+service RecordsService {
+	rpc Create(CreateRecordRequest) returns (UpdateRecordResponse) {}
+
+	rpc Update(Record) returns (UpdateRecordResponse) {}
+
+	rpc Delete(DeleteRecordRequest) returns (DeleteRecordResponse) {}
+
+	rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {}
+}
+
+message DeleteRecordRequest {
+	string id = 1;
+}
+
+message DeleteRecordResponse {
+	bool	success = 1;
+}
+
+message UpdateRecordResponse {
+	bool	success	= 1;
+	Record	record	= 2;
+}
+
+message GetRecordsRequest {
+	RecordType	type	= 1;
+	int32				page	= 2;
+}
+
+message GetRecordsResponse {
+	bool							success		= 1;
+	repeated Record		records		= 2;
+	int32							next_page	= 3;
+}

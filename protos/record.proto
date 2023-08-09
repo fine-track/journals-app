@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "github.com/fine-track/records-app/pb";
+
+import "google/protobuf/timestamp.proto";
+
+enum RecordType {
+	EXPENSE = 0;
+	INCOME = 1;
+}
+
+message CreateRecordRequest {
+	RecordType					type		= 2;
+	string						title		= 3;
+	int32						amount		= 4;
+	string						description	= 5;
+	google.protobuf.Timestamp	created_at	= 6;
+	google.protobuf.Timestamp	updated_at	= 7;
+}
+
+message Record {
+	string						id			= 1;
+	RecordType					type		= 2;
+	string						title		= 3;
+	int32						amount		= 4;
+	string						description	= 5;
+	google.protobuf.Timestamp	created_at	= 6;
+	google.protobuf.Timestamp	updated_at	= 7;
+}

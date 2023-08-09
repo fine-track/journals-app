@@ -1,0 +1,7 @@
+build
+tmp/
+cache/
+*.env
+*.log
+.vscode
+!.gitkeep
