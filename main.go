@@ -6,8 +6,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/fine-track/records-app/db"
-	"github.com/fine-track/records-app/services"
+	"github.com/fine-track/journals-app/db"
+	"github.com/fine-track/journals-app/services"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )

@@ -1,4 +1,4 @@
-module github.com/fine-track/records-app
+module github.com/fine-track/journals-app
 
 go 1.20
 

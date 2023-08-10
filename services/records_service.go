@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/fine-track/records-app/db"
-	"github.com/fine-track/records-app/pb"
+	"github.com/fine-track/journals-app/db"
+	"github.com/fine-track/journals-app/pb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
