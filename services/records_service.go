@@ -107,6 +107,6 @@ func pbRecordFromRecord(record db.Record) *pb.Record {
 	return r
 }
 
-func RegisterRecordsServer(s *grpc.Server) {
+func RegisterRecordsService(s *grpc.Server) {
 	pb.RegisterRecordsServiceServer(s, &recordsServer{})
 }

@@ -27,7 +27,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	services.RegisterRecordsServer(s)
+	services.RegisterRecordsService(s)
 
 	if err := s.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %v\n", err)
