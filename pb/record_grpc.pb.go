@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.23.4
-// source: records_service.proto
+// source: record.proto
 
 package pb
 
@@ -253,5 +253,5 @@ var RecordsService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "records_service.proto",
+	Metadata: "record.proto",
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -26,14 +25,6 @@ func ConnectDB() *mongo.Client {
 	}
 	DB = client.Database("finetrack")
 	RecordsColl = DB.Collection("records")
-
-	// create index for the types so that its faster to list records by their type
-	recordTypeIndex := mongo.IndexModel{
-		Keys: bson.D{{Key: "type", Value: 1}},
-	}
-	if _, err = RecordsColl.Indexes().CreateOne(context.TODO(), recordTypeIndex); err != nil {
-		log.Fatalln(err.Error())
-	}
 
 	return client
 }

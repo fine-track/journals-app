@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,18 +11,16 @@ import (
 )
 
 type Record struct {
-	ID          primitive.ObjectID  `bson:"_id" json:"_id"`
-	Type        string              `bson:"type" json:"type"`
-	Title       string              `bson:"title" json:"title"`
-	Amount      int32               `bson:"amount" json:"amount"`
-	Description string              `bson:"description" json:"description"`
-	Date        string              `bson:"date" json:"date"`
-	UserId      primitive.ObjectID  `bson:"user_id" json:"user_id"`
-	CreatedAt   primitive.Timestamp `bson:"created_at" json:"created_at"`
-	UpdatedAt   primitive.Timestamp `bson:"updated_at" json:"updated_at"`
+	ID          primitive.ObjectID `bson:"_id" json:"_id"`
+	UserId      primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Type        string             `bson:"type" json:"type"`
+	Date        string             `bson:"date" json:"date"`
+	Title       string             `bson:"title" json:"title"`
+	Description string             `bson:"description" json:"description"`
+	Amount      int32              `bson:"amount" json:"amount"`
+	CreatedAt   string             `bson:"created_at" json:"created_at"`
+	UpdatedAt   string             `bson:"updated_at" json:"updated_at"`
 }
-
-type RecordsList []Record
 
 const RECORDS_PER_PAGE int64 = 10
 
@@ -32,14 +29,14 @@ func (r *Record) New() error {
 		return err
 	}
 	payload := bson.M{
-		"type":        r.Type,
-		"title":       r.Title,
-		"amount":      r.Amount,
-		"description": r.Description,
-		"date":        r.Date,
 		"user_id":     r.UserId,
-		"create_at":   primitive.Timestamp{T: uint32(time.Now().Unix()), I: 0},
-		"updated_at":  primitive.Timestamp{T: uint32(time.Now().Unix()), I: 0},
+		"type":        r.Type,
+		"date":        r.Date,
+		"title":       r.Title,
+		"description": r.Description,
+		"amount":      r.Amount,
+		"create_at":   time.Now().UTC().String(),
+		"updated_at":  time.Now().UTC().String(),
 	}
 	if result, err := RecordsColl.InsertOne(context.TODO(), payload); err != nil {
 		return err
@@ -51,10 +48,10 @@ func (r *Record) New() error {
 }
 
 func (r *Record) Get(id string) error {
-	if ID, err := primitive.ObjectIDFromHex(id); err != nil {
+	if Id, err := primitive.ObjectIDFromHex(id); err != nil {
 		return err
 	} else {
-		err = RecordsColl.FindOne(context.TODO(), ID).Decode(r)
+		err = RecordsColl.FindOne(context.TODO(), bson.M{"_id": Id}).Decode(r)
 		return err
 	}
 }
@@ -70,7 +67,7 @@ func (r *Record) Update() error {
 			"description": r.Description,
 			"date":        r.Date,
 			"type":        r.Type,
-			"updated_at":  primitive.Timestamp{T: uint32(time.Now().Unix()), I: 0},
+			"updated_at":  time.Now().UTC().String(),
 		},
 	}
 	_, err := RecordsColl.UpdateByID(context.TODO(), r.ID, payload)
@@ -81,27 +78,35 @@ func (r *Record) Delete(id string) error {
 	if ID, err := primitive.ObjectIDFromHex(id); err != nil {
 		return err
 	} else {
-		_, err = RecordsColl.DeleteOne(context.TODO(), ID)
+		_, err = RecordsColl.DeleteOne(context.TODO(), bson.M{"_id": ID})
 		return err
 	}
 }
 
-func (rl *RecordsList) ListByType(userId string, t string, pageIdx int64) error {
-	filter := bson.M{"type": t, "user_id": userId}
-	opts := options.Find().SetLimit(RECORDS_PER_PAGE).SetSkip(pageIdx * 10)
+func GetUserRecords(userId string, recordType string, pageIdx int32) ([]Record, error) {
+	rl := []Record{}
+
+	objUserId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return rl, err
+	}
+
+	if err := typeCheck(recordType); err != nil {
+		return rl, err
+	}
+
+	filter := bson.M{"user_id": objUserId}
+	opts := options.Find().SetLimit(RECORDS_PER_PAGE).SetSkip(RECORDS_PER_PAGE * int64(pageIdx))
 	cursor, err := RecordsColl.Find(context.TODO(), filter, opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	results := RecordsList{}
-	if err = cursor.All(context.TODO(), &results); err != nil {
-		return err
+	defer cursor.Close(context.TODO())
+
+	if err = cursor.All(context.TODO(), &rl); err != nil {
+		return nil, err
 	}
-	for _, result := range results {
-		res, _ := json.Marshal(result)
-		fmt.Println(string(res))
-	}
-	return nil
+	return rl, nil
 }
 
 func typeCheck(t string) error {

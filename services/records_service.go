@@ -2,14 +2,11 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/fine-track/journals-app/db"
 	"github.com/fine-track/journals-app/pb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type recordsServer struct {
@@ -18,7 +15,6 @@ type recordsServer struct {
 
 // Create
 func (s *recordsServer) Create(ctx context.Context, req *pb.CreateRecordRequest) (*pb.UpdateRecordResponse, error) {
-	fmt.Println("adding a new record")
 	userId, err := primitive.ObjectIDFromHex(req.UserId)
 	if err != nil {
 		return nil, err
@@ -62,16 +58,14 @@ func (s *recordsServer) Update(ctx context.Context, req *pb.Record) (*pb.UpdateR
 		return nil, err
 	}
 
-	primTs := primitive.Timestamp{T: uint32(req.CreatedAt.AsTime().Unix()), I: 0}
 	r := db.Record{
-		ID:          id,
 		UserId:      userId,
+		ID:          id,
 		Type:        req.Type.String(),
+		Date:        req.Date,
 		Title:       req.Title,
 		Description: req.Description,
 		Amount:      req.Amount,
-		Date:        req.Date,
-		CreatedAt:   primTs,
 	}
 	if err := r.Update(); err != nil {
 		return nil, err
@@ -85,17 +79,20 @@ func (s *recordsServer) Update(ctx context.Context, req *pb.Record) (*pb.UpdateR
 
 // GetRecords
 func (s *recordsServer) GetRecords(ctx context.Context, req *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	recordsList := db.RecordsList{}
-	if err := recordsList.ListByType(req.UserId, req.Type.String(), int64(req.Page)); err != nil {
+	recordsList, err := db.GetUserRecords(req.UserId, req.Type.String(), req.Page)
+	if err != nil {
 		return nil, err
 	}
+
 	pbRecords := []*pb.Record{}
 	for _, record := range recordsList {
 		pbRecords = append(pbRecords, pbRecordFromRecord(record))
 	}
 	res := &pb.GetRecordsResponse{
-		Success: true,
-		Records: pbRecords,
+		Success:  true,
+		Records:  pbRecords,
+		NextPage: req.Page + 1,
+		Message:  "Records found",
 	}
 	return res, nil
 }
@@ -106,10 +103,6 @@ func (s *recordsServer) Ping(ctx context.Context, req *pb.PingRequest) (*pb.Ping
 		Response: "Pong",
 	}
 	return res, nil
-}
-
-func timestampToPbTime(ts primitive.Timestamp) *timestamppb.Timestamp {
-	return timestamppb.New(time.Unix(int64(ts.T), 0))
 }
 
 func strToEnumType(t string) pb.RecordType {
@@ -129,8 +122,8 @@ func pbRecordFromRecord(record db.Record) *pb.Record {
 		Date:        record.Date,
 		UserId:      record.UserId.Hex(),
 		Description: record.Description,
-		CreatedAt:   timestampToPbTime(record.CreatedAt),
-		UpdatedAt:   timestampToPbTime(record.UpdatedAt),
+		CreatedAt:   record.CreatedAt,
+		UpdatedAt:   record.UpdatedAt,
 	}
 	return r
 }
