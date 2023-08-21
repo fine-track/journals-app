@@ -14,8 +14,10 @@ message CreateRecordRequest {
 	string						title		= 3;
 	int32						amount		= 4;
 	string						description	= 5;
+	string						date		= 8;
 	google.protobuf.Timestamp	created_at	= 6;
 	google.protobuf.Timestamp	updated_at	= 7;
+	string						user_id		= 9;
 }
 
 message Record {
@@ -24,6 +26,8 @@ message Record {
 	string						title		= 3;
 	int32						amount		= 4;
 	string						description	= 5;
+	string						date		= 8;
 	google.protobuf.Timestamp	created_at	= 6;
 	google.protobuf.Timestamp	updated_at	= 7;
+	string						user_id		= 9;
 }

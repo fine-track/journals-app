@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v\n", err)
 	}
+	log.Printf("listening on: %s", listener.Addr())
 
 	s := grpc.NewServer()
 	services.RegisterRecordsService(s)

@@ -1,5 +1,5 @@
-server:
-	go run main.go
+dev:
+	go run ./*.go
 
 proto:
 	protoc --proto_path=protos --go_out=pb --go_opt=paths=source_relative \

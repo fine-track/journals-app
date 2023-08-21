@@ -17,6 +17,8 @@ type Record struct {
 	Title       string              `bson:"title" json:"title"`
 	Amount      int32               `bson:"amount" json:"amount"`
 	Description string              `bson:"description" json:"description"`
+	Date        string              `bson:"date" json:"date"`
+	UserId      primitive.ObjectID  `bson:"user_id" json:"user_id"`
 	CreatedAt   primitive.Timestamp `bson:"created_at" json:"created_at"`
 	UpdatedAt   primitive.Timestamp `bson:"updated_at" json:"updated_at"`
 }
@@ -34,8 +36,10 @@ func (r *Record) New() error {
 		"title":       r.Title,
 		"amount":      r.Amount,
 		"description": r.Description,
-		"create_at":   primitive.NewDateTimeFromTime(time.Now()),
-		"updated_at":  primitive.NewDateTimeFromTime(time.Now()),
+		"date":        r.Date,
+		"user_id":     r.UserId,
+		"create_at":   primitive.Timestamp{T: uint32(time.Now().Unix()), I: 0},
+		"updated_at":  primitive.Timestamp{T: uint32(time.Now().Unix()), I: 0},
 	}
 	if result, err := RecordsColl.InsertOne(context.TODO(), payload); err != nil {
 		return err
@@ -64,7 +68,9 @@ func (r *Record) Update() error {
 			"title":       r.Title,
 			"amount":      r.Amount,
 			"description": r.Description,
-			"updated_at":  primitive.NewDateTimeFromTime(time.Now()),
+			"date":        r.Date,
+			"type":        r.Type,
+			"updated_at":  primitive.Timestamp{T: uint32(time.Now().Unix()), I: 0},
 		},
 	}
 	_, err := RecordsColl.UpdateByID(context.TODO(), r.ID, payload)
@@ -80,8 +86,8 @@ func (r *Record) Delete(id string) error {
 	}
 }
 
-func (rl *RecordsList) ListByType(t string, pageIdx int64) error {
-	filter := bson.M{"type": t}
+func (rl *RecordsList) ListByType(userId string, t string, pageIdx int64) error {
+	filter := bson.M{"type": t, "user_id": userId}
 	opts := options.Find().SetLimit(RECORDS_PER_PAGE).SetSkip(pageIdx * 10)
 	cursor, err := RecordsColl.Find(context.TODO(), filter, opts)
 	if err != nil {

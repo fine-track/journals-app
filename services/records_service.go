@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/fine-track/journals-app/db"
@@ -17,11 +18,18 @@ type recordsServer struct {
 
 // Create
 func (s *recordsServer) Create(ctx context.Context, req *pb.CreateRecordRequest) (*pb.UpdateRecordResponse, error) {
+	fmt.Println("adding a new record")
+	userId, err := primitive.ObjectIDFromHex(req.UserId)
+	if err != nil {
+		return nil, err
+	}
 	record := db.Record{
 		Type:        req.Type.String(),
 		Title:       req.Title,
 		Description: req.Description,
 		Amount:      req.Amount,
+		Date:        req.Date,
+		UserId:      userId,
 	}
 	if err := record.New(); err != nil {
 		return nil, err
@@ -48,12 +56,22 @@ func (s *recordsServer) Update(ctx context.Context, req *pb.Record) (*pb.UpdateR
 	if err != nil {
 		return nil, err
 	}
+
+	userId, err := primitive.ObjectIDFromHex(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	primTs := primitive.Timestamp{T: uint32(req.CreatedAt.AsTime().Unix()), I: 0}
 	r := db.Record{
 		ID:          id,
+		UserId:      userId,
 		Type:        req.Type.String(),
 		Title:       req.Title,
 		Description: req.Description,
 		Amount:      req.Amount,
+		Date:        req.Date,
+		CreatedAt:   primTs,
 	}
 	if err := r.Update(); err != nil {
 		return nil, err
@@ -68,7 +86,7 @@ func (s *recordsServer) Update(ctx context.Context, req *pb.Record) (*pb.UpdateR
 // GetRecords
 func (s *recordsServer) GetRecords(ctx context.Context, req *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
 	recordsList := db.RecordsList{}
-	if err := recordsList.ListByType(req.Type.String(), int64(req.Page)); err != nil {
+	if err := recordsList.ListByType(req.UserId, req.Type.String(), int64(req.Page)); err != nil {
 		return nil, err
 	}
 	pbRecords := []*pb.Record{}
@@ -78,6 +96,14 @@ func (s *recordsServer) GetRecords(ctx context.Context, req *pb.GetRecordsReques
 	res := &pb.GetRecordsResponse{
 		Success: true,
 		Records: pbRecords,
+	}
+	return res, nil
+}
+
+func (s *recordsServer) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingResponse, error) {
+	res := &pb.PingResponse{
+		Message:  req.Message,
+		Response: "Pong",
 	}
 	return res, nil
 }
@@ -100,6 +126,8 @@ func pbRecordFromRecord(record db.Record) *pb.Record {
 		Type:        strToEnumType(record.Type),
 		Amount:      record.Amount,
 		Title:       record.Title,
+		Date:        record.Date,
+		UserId:      record.UserId.Hex(),
 		Description: record.Description,
 		CreatedAt:   timestampToPbTime(record.CreatedAt),
 		UpdatedAt:   timestampToPbTime(record.UpdatedAt),

@@ -23,6 +23,7 @@ const (
 	RecordsService_Update_FullMethodName     = "/RecordsService/Update"
 	RecordsService_Delete_FullMethodName     = "/RecordsService/Delete"
 	RecordsService_GetRecords_FullMethodName = "/RecordsService/GetRecords"
+	RecordsService_Ping_FullMethodName       = "/RecordsService/Ping"
 )
 
 // RecordsServiceClient is the client API for RecordsService service.
@@ -33,6 +34,7 @@ type RecordsServiceClient interface {
 	Update(ctx context.Context, in *Record, opts ...grpc.CallOption) (*UpdateRecordResponse, error)
 	Delete(ctx context.Context, in *DeleteRecordRequest, opts ...grpc.CallOption) (*DeleteRecordResponse, error)
 	GetRecords(ctx context.Context, in *GetRecordsRequest, opts ...grpc.CallOption) (*GetRecordsResponse, error)
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 }
 
 type recordsServiceClient struct {
@@ -79,6 +81,15 @@ func (c *recordsServiceClient) GetRecords(ctx context.Context, in *GetRecordsReq
 	return out, nil
 }
 
+func (c *recordsServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+	out := new(PingResponse)
+	err := c.cc.Invoke(ctx, RecordsService_Ping_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecordsServiceServer is the server API for RecordsService service.
 // All implementations must embed UnimplementedRecordsServiceServer
 // for forward compatibility
@@ -87,6 +98,7 @@ type RecordsServiceServer interface {
 	Update(context.Context, *Record) (*UpdateRecordResponse, error)
 	Delete(context.Context, *DeleteRecordRequest) (*DeleteRecordResponse, error)
 	GetRecords(context.Context, *GetRecordsRequest) (*GetRecordsResponse, error)
+	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	mustEmbedUnimplementedRecordsServiceServer()
 }
 
@@ -105,6 +117,9 @@ func (UnimplementedRecordsServiceServer) Delete(context.Context, *DeleteRecordRe
 }
 func (UnimplementedRecordsServiceServer) GetRecords(context.Context, *GetRecordsRequest) (*GetRecordsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRecords not implemented")
+}
+func (UnimplementedRecordsServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedRecordsServiceServer) mustEmbedUnimplementedRecordsServiceServer() {}
 
@@ -191,6 +206,24 @@ func _RecordsService_GetRecords_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RecordsService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecordsServiceServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RecordsService_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecordsServiceServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RecordsService_ServiceDesc is the grpc.ServiceDesc for RecordsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -213,6 +246,10 @@ var RecordsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRecords",
 			Handler:    _RecordsService_GetRecords_Handler,
+		},
+		{
+			MethodName: "Ping",
+			Handler:    _RecordsService_Ping_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
